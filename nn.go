@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"golang/mnist"
 	"log"
-	"math"
-	"math/rand"
 )
 
 var LEARNING_RATE = 0.1
@@ -38,13 +36,10 @@ func (nn *neuralNetwork) initNetwork(layerConfigs []struct {
 	return nil
 }
 
-func generateWeight(min, max float64) float64 {
-	return min + rand.Float64()*(max-min)
-}
-
 func (nn *neuralNetwork) train(input []float64, target float64) {
 
 	nn.forward(input)
+	nn.backpropagation(softmax(&nn.layers[3]), onehotlabels(int8(target)))
 }
 
 func (nn *neuralNetwork) forward(input []float64) {
@@ -57,57 +52,33 @@ func (nn *neuralNetwork) forward(input []float64) {
 	}
 }
 
-func (nn *neuralNetwork) backpropagation(soft_max_output []float64) {
+func (nn *neuralNetwork) backpropagation(soft_max_output []float64, y_true []float64) {
+	grad_loss := calc_initial_grad_loss(soft_max_output, y_true)
+
 	for i := len(nn.layers) - 1; i >= 0; i-- {
-		if i == len(nn.layers)-1 {
-			nn.layers[i].update_weights(soft_max_output)
-		} else {
-			nn.layers[i].update_weights(grad_loss)
-			// grad_loss :=  something to update grad_loss everytiem
+		fmt.Print(len(nn.layers[3].perceptrons[0].weights), len(grad_loss))
+		nn.update_weights(grad_loss)
+
+		if i > 0 {
+			grad_loss = calc_grad_loss(nn.layers[i], grad_loss)
 		}
 	}
 }
 
-func onehotlabels(label int8) []float64 {
-	if label < 0 || label > 9 {
-		log.Fatal("label must be between 0 and 9")
-	}
-	onehot := make([]float64, 10)
-	onehot[label] = 1
-	return onehot
-}
+func (nn *neuralNetwork) update_weights(grad_loss []float64) {
+	for i := range nn.layers {
+		layer := &nn.layers[i]
+		inputs := layer.inputs // Use the stored inputs
 
-func CE_loss(predictions []float64, targets []float64) float64 {
-	epsilon := 1e-10 // Small constant to avoid log(0)
-	loss := 0.0
-
-	for i := range predictions {
-		loss += targets[i] * math.Log(predictions[i]+epsilon)
-	}
-
-	return -loss
-}
-
-func calculate_grad_loss(predictions []float64, targets []float64) []float64 {
-
-	grad_loss := make([]float64, len(predictions))
-	for i := range predictions {
-		grad_loss[i] = predictions[i] - targets[i]
-	}
-	return grad_loss
-}
-
-func (l *layer) update_weights(grad_loss []float64) {
-
-	for i := range l.perceptrons {
-		for j := range l.perceptrons[i].weights {
-			l.perceptrons[i].weights[j] -= LEARNING_RATE * grad_loss[j]
+		for j := range layer.perceptrons {
+			perceptron := &layer.perceptrons[j]
+			for k := range perceptron.weights {
+				perceptron.weights[k] -= LEARNING_RATE * grad_loss[j] * inputs[k]
+			}
 		}
 	}
 }
 
-// How to implement a simple neural network in Go
-// https://appliedgo.net/perceptron/
 func main() {
 	train_set, test_set, err := mnist.Load("/home/norbert/repos/golang/")
 
@@ -142,5 +113,4 @@ func main() {
 
 	nn.train(pixels, float64(train_set.Labels[0]))
 
-	fmt.Println(CE_loss(softmax(&nn.layers[3]), onehotlabels(train_set.Labels[0])))
 }

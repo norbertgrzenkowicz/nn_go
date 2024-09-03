@@ -6,6 +6,7 @@ import (
 
 type layer struct {
 	perceptrons []perceptron
+	inputs      []float64
 	layer_index int
 }
 
