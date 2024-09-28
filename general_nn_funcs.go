@@ -1,85 +1,62 @@
 package main
 
 import (
-	"log"
-	"math"
+	"fmt"
 	"math/rand"
 )
 
-func softmax(outputs *layer) []float64 {
-	var max float64 = math.Inf(-1)
-	for _, output := range outputs.perceptrons {
-		if output.output > max {
-			max = output.output
-		}
-	}
+// func softmax(outputs *layer) []float64 {
+// 	var max float64 = math.Inf(-1)
+// 	for _, output := range outputs.perceptrons {
+// 		if output.output > max {
+// 			max = output.output
+// 		}
+// 	}
 
-	var sum float64
-	for _, output := range outputs.perceptrons {
-		sum += math.Exp(output.output - max)
-	}
+// 	var sum float64
+// 	for _, output := range outputs.perceptrons {
+// 		sum += math.Exp(output.output - max)
+// 	}
 
-	var result []float64
-	for _, output := range outputs.perceptrons {
-		result = append(result, math.Exp(output.output-max)/sum)
-	}
+// 	var result []float64
+// 	for _, output := range outputs.perceptrons {
+// 		result = append(result, math.Exp(output.output-max)/sum)
+// 	}
 
-	return result
-}
+// 	return result
+// }
 
 func calc_initial_grad_loss(soft_max_output, y_true []float64) []float64 {
 	grad_loss := make([]float64, len(soft_max_output))
 	for i := range soft_max_output {
-		grad_loss[i] = soft_max_output[i] - y_true[i]
+		grad_loss[i] = soft_max_output[i] - y_true[0]
 	}
+	fmt.Println("Init grad loss length ", len(grad_loss))
 	return grad_loss
 }
 
-func calc_grad_loss(layer layer, next_grad_loss []float64) []float64 {
-	// Initialize gradient loss for this layer
+func calc_last_grad_loss(layer *layer, next_grad_loss []float64) []float64 {
 	grad_loss := make([]float64, len(layer.perceptrons))
-
-	for j := range layer.perceptrons { // Iterate over each neuron in the hidden layer
+	for j := range layer.perceptrons {
 		sum := 0.0
-		for k := range next_grad_loss { // Iterate over each neuron in the next layer (output layer)
-			weight := layer.perceptrons[j].weights[k] // weight from hidden neuron `j` to output neuron `k`
-			sum += next_grad_loss[k] * weight
+		for k := range next_grad_loss {
+			sum += next_grad_loss[k] * layer.perceptrons[j].weights[0]
 		}
-		// Calculate the final gradient for hidden neuron `j`
-		grad_loss[j] = sum * layer.perceptrons[j].output
+		grad_loss[j] = sum * layer.perceptrons[j].output * (1 - layer.perceptrons[j].output)
 	}
-
 	return grad_loss
 }
 
-func calc_grad_loss_05(layer layer, next_grad_loss []float64) []float64 {
+func calc_grad_loss(layer *layer, next_grad_loss []float64) []float64 {
 	grad_loss := make([]float64, len(layer.perceptrons))
-	for i, neuron := range layer.perceptrons {
-		for j, weight := range neuron.weights {
-			grad_loss[i] += next_grad_loss[j] * weight * neuron.output
+	for j := range grad_loss {
+		sum := 0.0
+		for k := 0; k < min(len(next_grad_loss), len(layer.perceptrons[j].weights)); k++ {
+			sum += next_grad_loss[k] * layer.perceptrons[j].weights[k]
 		}
+		grad_loss[j] = sum * layer.perceptrons[j].output * (1 - layer.perceptrons[j].output)
 	}
 	return grad_loss
-}
-
-func onehotlabels(label int8) []float64 {
-	if label < 0 || label > 9 {
-		log.Fatal("label must be between 0 and 9")
-	}
-	onehot := make([]float64, 10)
-	onehot[label] = 1
-	return onehot
-}
-
-func CE_loss(predictions []float64, targets []float64) float64 {
-	epsilon := 1e-10 // Small constant to avoid log(0)
-	loss := 0.0
-
-	for i := range predictions {
-		loss += targets[i] * math.Log(predictions[i]+epsilon)
-	}
-
-	return -loss
 }
 
 func generateWeight(min, max float64) float64 {

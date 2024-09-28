@@ -3,19 +3,17 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
-type perceptron struct {
-	weights []float64
-	output  float64
-}
+// type perceptron struct {
+// 	weights []float64
+// 	bias float64
+// 	output  float64
+// }
 
 func (p *perceptron) rELU(x float64) float64 {
-	if x > 0 {
-		return x
-	} else {
-		return 0
-	}
+	return math.Max(0, x)
 }
 
 func (p *perceptron) calc_output(input []float64) error {
@@ -30,12 +28,4 @@ func (p *perceptron) calc_output(input []float64) error {
 	}
 	p.output = p.rELU(sum)
 	return nil
-}
-
-func (p *perceptron) predict() {
-	// TODO
-}
-
-func (p *perceptron) test() {
-	// TODO
 }
