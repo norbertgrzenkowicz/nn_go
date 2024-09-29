@@ -3,21 +3,13 @@ package main
 type layer struct {
 	perceptrons []perceptron
 	inputs      []float64
-	layer_index int
+	layerIndex  int
 }
 
-func (layer *layer) setWeightToLayer() {
-	for _, perceptron := range layer.perceptrons {
-		for i := range perceptron.weights {
-			perceptron.weights[i] = generateWeight(1.0, 4.0)
-		}
-	}
-}
-
-func (l *layer) calc_output_in_layer() ([]float64, error) {
+func (l *layer) CalcOutputInLayer() ([]float64, error) {
 	var outputs []float64
 
-	if l.layer_index == 0 {
+	if l.layerIndex == 0 {
 		for i, inp := range l.inputs {
 			dupa := l.perceptrons[i].rELU(inp * l.perceptrons[i].weights[0])
 			outputs = append(outputs, dupa)
@@ -27,7 +19,7 @@ func (l *layer) calc_output_in_layer() ([]float64, error) {
 	}
 
 	for i, perc := range l.perceptrons {
-		err := perc.calc_output(l.inputs)
+		err := perc.calcOutput(l.inputs)
 		if err != nil {
 			return nil, err
 		}

@@ -23,7 +23,7 @@ The network uses multiple layers of perceptrons, ReLU activation, and softmax fo
 ## File Structure
 - **`nn.go`**: Main file to initialize, train, and evaluate the neural network.
 - **`layer.go`**: Defines the layer  structures along with forward propagation and weight updates.
-- **`general_nn_funcs.go`**: Utility functions for weight initialization and gradient loss calculation.
+- **`general_nn_funcs.go`**: General Utility functions for loss, activation, softmax.
 - **`perceptron.go`**: Defines perceptron structure.
 
 ## How to Run Locally

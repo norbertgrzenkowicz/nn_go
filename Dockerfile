@@ -19,6 +19,6 @@ COPY . .
 
 RUN go mod tidy
 
-RUN go build -o nn .
+RUN go build -o main .
 
-CMD ["./nn"]
+CMD ["./main"]
