@@ -200,7 +200,12 @@ func crossEntropyLoss(predictions []float64, target int) float64 {
 }
 
 func main() {
-	train_set, test_set, err := mnist.Load("/home/norbert/repos/golang/")
+    dir, err := os.Getwd()
+    if err != nil {
+        fmt.Println("Error:", err)
+    }
+
+	train_set, test_set, err := mnist.Load(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
